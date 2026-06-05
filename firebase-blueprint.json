@@ -1,0 +1,170 @@
+{
+  "entities": {
+    "Review": {
+      "title": "Review",
+      "description": "User review or testimonial.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Reviewer's name"
+        },
+        "role": {
+          "type": "string",
+          "description": "Reviewer's role/relationship (e.g. Volunteer, Donor)"
+        },
+        "rating": {
+          "type": "integer",
+          "description": "Star rating (1-5)"
+        },
+        "message": {
+          "type": "string",
+          "description": "The review text content"
+        },
+        "approved": {
+          "type": "boolean",
+          "description": "Whether the review is approved for display"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation server timestamp"
+        }
+      },
+      "required": ["name", "message", "rating"]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "Photo item in the stray care gallery.",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Image file URL in Firebase Storage"
+        },
+        "caption": {
+          "type": "string",
+          "description": "Optional caption for the photo"
+        },
+        "author": {
+          "type": "string",
+          "description": "Who uploaded/took the photo"
+        },
+        "storagePath": {
+          "type": "string",
+          "description": "Storage bucket file path"
+        },
+        "approved": {
+          "type": "boolean",
+          "description": "Whether the photo is approved for display"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation server timestamp"
+        }
+      },
+      "required": ["url"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "Support messages sent from the contact form.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Sender's name"
+        },
+        "email": {
+          "type": "string",
+          "description": "Sender's email"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject line of the message"
+        },
+        "message": {
+          "type": "string",
+          "description": "The email body/message content"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation server timestamp"
+        }
+      },
+      "required": ["name", "email", "message"]
+    },
+    "Donation": {
+      "title": "Donation",
+      "description": "Donations record with verification elements from payment gateway.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Donor's name"
+        },
+        "email": {
+          "type": "string",
+          "description": "Donor's contact email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Donor's mobile phone number"
+        },
+        "pan": {
+          "type": "string",
+          "description": "Donor's Permanent Account Number (for tax 80G benefit in India)"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Contribution amount in INR"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "Frequency of transaction (e.g. once, monthly)"
+        },
+        "tax80g": {
+          "type": "boolean",
+          "description": "Request 80g receipt certificate"
+        },
+        "paymentId": {
+          "type": "string",
+          "description": "Payment ID from Razorpay"
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Order ID from Razorpay"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the transaction has been verified"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation server timestamp"
+        }
+      },
+      "required": ["name", "email", "amount", "verified"]
+    }
+  },
+  "firestore": {
+    "reviews": {
+      "schema": "Review",
+      "description": "Collection of community testimonials"
+    },
+    "gallery": {
+      "schema": "GalleryItem",
+      "description": "Collection of street care and rescue photos"
+    },
+    "messages": {
+      "schema": "ContactMessage",
+      "description": "Collection of inbox feedback/contact-us requests"
+    },
+    "donations": {
+      "schema": "Donation",
+      "description": "Collection of processed donations and contributions"
+    }
+  }
+}

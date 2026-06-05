@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE GLOBAL HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "dellusr688@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches("^[a-zA-Z0-9_\\-]+$");
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- VALIDATION SCHEMAS ---
+    function isValidReview(data) {
+      return data.name is string && data.name.size() <= 100
+        && (!("role" in data) || data.role is string && data.role.size() <= 100)
+        && (data.rating is int || data.rating is float) && data.rating >= 1 && data.rating <= 5
+        && data.message is string && data.message.size() <= 5000
+        && data.approved is bool
+        && data.createdAt is timestamp;
+    }
+
+    function isValidGalleryItem(data) {
+      return data.url is string && data.url.size() <= 2048
+        && (!("caption" in data) || data.caption == null || (data.caption is string && data.caption.size() <= 500))
+        && (!("author" in data) || data.author == null || (data.author is string && data.author.size() <= 100))
+        && (!("storagePath" in data) || data.storagePath == null || (data.storagePath is string && data.storagePath.size() <= 1024))
+        && (!("path" in data) || data.path == null || (data.path is string && data.path.size() <= 1024))
+        && data.approved is bool
+        && data.createdAt is timestamp;
+    }
+
+    function isValidMessage(data) {
+      return data.name is string && data.name.size() <= 100
+        && data.email is string && data.email.size() <= 150
+        && (!("subject" in data) || data.subject == null || (data.subject is string && data.subject.size() <= 200))
+        && data.message is string && data.message.size() <= 10000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidDonation(data) {
+      return data.name is string && data.name.size() <= 100
+        && data.email is string && data.email.size() <= 150
+        && (!("phone" in data) || data.phone == null || (data.phone is string && data.phone.size() <= 20))
+        && (!("pan" in data) || data.pan == null || (data.pan is string && data.pan.size() <= 20))
+        && (data.amount is int || data.amount is float) && data.amount > 0
+        && (!("frequency" in data) || data.frequency is string && data.frequency.size() <= 50)
+        && (!("tax80g" in data) || data.tax80g is bool)
+        && (!("paymentId" in data) || data.paymentId is string)
+        && (!("orderId" in data) || data.orderId is string)
+        && data.verified is bool
+        && data.createdAt is timestamp
+        && (!data.verified || ("trustToken" in data && data.trustToken == "gsc_trust_token_a6f7b198c2534f"));
+    }
+
+    // --- COLLECTION RULES ---
+
+    match /reviews/{id} {
+      allow get: if resource.data.approved == true || isAdmin();
+      allow list: if resource.data.approved == true || isAdmin();
+      allow create: if isValidId(id) && isValidReview(incoming()) && (
+        (isAdmin()) ||
+        (incoming().approved == false && incoming().createdAt == request.time)
+      );
+      allow update: if isValidId(id) && (
+        isAdmin() && isValidReview(incoming())
+      );
+      allow delete: if isValidId(id) && isAdmin();
+    }
+
+    match /gallery/{id} {
+      allow get: if resource.data.approved == true || isAdmin();
+      allow list: if resource.data.approved == true || isAdmin();
+      allow create: if isValidId(id) && isValidGalleryItem(incoming()) && (
+        (isAdmin()) ||
+        (incoming().approved == false && incoming().createdAt == request.time)
+      );
+      allow update: if isValidId(id) && (
+        isAdmin() && isValidGalleryItem(incoming())
+      );
+      allow delete: if isValidId(id) && isAdmin();
+    }
+
+    match /messages/{id} {
+      allow get, list, update, delete: if isValidId(id) && isAdmin();
+      allow create: if isValidId(id) && isValidMessage(incoming()) && incoming().createdAt == request.time;
+    }
+
+    match /donations/{id} {
+      allow get, list, update, delete: if isValidId(id) && isAdmin();
+      allow create: if isValidId(id) && isValidDonation(incoming());
+    }
+
+    match /admins/{id} {
+      allow read, write: if isValidId(id) && isAdmin();
+    }
+
+    match /audit_logs/{id} {
+      allow read, write: if isValidId(id) && isAdmin();
+      allow create: if isValidId(id) && incoming().createdAt == request.time;
+    }
+  }
+}
